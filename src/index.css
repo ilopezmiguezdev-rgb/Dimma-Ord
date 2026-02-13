@@ -1,0 +1,150 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 200 20% 98%; /* Lightest Aqua/Sky Blue */
+    --foreground: 200 15% 20%; /* Dark Slate Blue/Gray */
+
+    --card: 200 20% 96%; /* Very Light Aqua/Sky Blue */
+    --card-foreground: 200 15% 20%;
+
+    --popover: 200 20% 96%;
+    --popover-foreground: 200 15% 20%;
+
+    --primary: 180 65% 45%; /* Teal - Main Aqua Marine */
+    --primary-foreground: 200 0% 100%; /* White */
+
+    --secondary: 190 50% 75%; /* Lighter Aqua/Sky Blue */
+    --secondary-foreground: 180 60% 30%; /* Darker Teal */
+
+    --muted: 200 20% 90%; /* Light Grayish Blue */
+    --muted-foreground: 200 10% 45%; /* Medium Slate Gray */
+
+    --accent: 170 70% 55%; /* Vibrant Aquamarine/Turquoise */
+    --accent-foreground: 200 0% 100%; /* White */
+
+    --destructive: 0 60% 55%; /* Soft Red */
+    --destructive-foreground: 0 0% 100%; /* White */
+
+    --border: 190 30% 85%; /* Light Aqua/Sky Blue Border */
+    --input: 200 25% 94%; /* Very Light Aqua/Sky Blue Input Background */
+    --ring: 180 60% 50%; /* Teal for focus rings */
+
+    --radius: 0.5rem; 
+  }
+
+  .dark {
+    --background: 200 30% 12%; /* Dark Slate Blue */
+    --foreground: 190 20% 90%; /* Light Aqua/Sky Gray */
+
+    --card: 200 28% 17%; /* Darker Slate Blue */
+    --card-foreground: 190 20% 90%;
+
+    --popover: 200 28% 17%;
+    --popover-foreground: 190 20% 90%;
+
+    --primary: 180 60% 55%; /* Brighter Teal for dark mode */
+    --primary-foreground: 200 10% 5%; /* Very Dark Blue/Black */
+
+    --secondary: 200 25% 25%; /* Medium Dark Slate Blue */
+    --secondary-foreground: 190 20% 90%;
+
+    --muted: 200 25% 22%; /* Dark Grayish Blue */
+    --muted-foreground: 190 15% 65%; /* Lighter Medium Gray */
+
+    --accent: 170 65% 65%; /* Brighter Aquamarine/Turquoise for dark mode */
+    --accent-foreground: 200 10% 5%; 
+
+    --destructive: 0 55% 60%; /* Softer, Brighter Red for dark mode */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 200 20% 30%; /* Medium Dark Slate Border */
+    --input: 200 25% 20%; /* Dark Slate Input Background */
+    --ring: 180 60% 60%; /* Brighter Teal for focus rings */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-slate-100 dark:bg-slate-800;
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-teal-500/50 dark:bg-teal-400/50;
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-teal-500/70 dark:bg-teal-400/70;
+  }
+  .styled-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .styled-scrollbar::-webkit-scrollbar-track {
+    @apply bg-slate-200 dark:bg-slate-700/50;
+    border-radius: 10px;
+  }
+  .styled-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-sky-500/60 dark:bg-sky-400/60;
+    border-radius: 10px;
+  }
+  .styled-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-sky-500/80 dark:bg-sky-400/80;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .glassmorphism {
+    @apply bg-white/30 dark:bg-slate-800/30 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 shadow-2xl;
+  }
+}
+
+/* React Day Picker Customizations */
+.rdp {
+  --rdp-cell-size: 32px;
+  --rdp-caption-font-size: 1rem;
+  --rdp-accent-color: hsl(var(--primary)); /* Teal */
+  --rdp-background-color: hsl(var(--primary) / 0.1);
+  --rdp-accent-color-dark: hsl(var(--primary)); /* Teal */
+  --rdp-background-color-dark: hsl(var(--primary) / 0.2);
+  --rdp-outline: 2px solid hsl(var(--primary)); 
+  --rdp-outline-selected: 3px solid hsl(var(--primary));
+}
+
+.dark .rdp {
+  --rdp-accent-color: hsl(var(--primary));
+  --rdp-background-color: hsl(var(--primary) / 0.2);
+}
+
+.rdp-day_selected, .rdp-day_selected:focus-visible, .rdp-day_selected:hover {
+  font-weight: bold;
+  color: hsl(var(--primary-foreground));
+  background-color: hsl(var(--primary)) !important;
+  border-radius: var(--radius);
+}
+.rdp-day_today {
+  font-weight: bold;
+  color: hsl(var(--accent));
+}
+.rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
+    background-color: hsl(var(--primary) / 0.1);
+    border-radius: var(--radius);
+}

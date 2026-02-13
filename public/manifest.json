@@ -1,0 +1,20 @@
+{
+  "short_name": "Dimma App",
+  "name": "Servicio Técnico Dimma",
+  "icons": [
+    {
+      "src": "https://storage.googleapis.com/hostinger-horizons-assets-prod/3ce3d85f-4f57-4c75-9f23-346da62300fc/85b11566902563bbbd110f9a27abcb49_192x192.jpg",
+      "type": "image/jpeg",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://storage.googleapis.com/hostinger-horizons-assets-prod/3ce3d85f-4f57-4c75-9f23-346da62300fc/85b11566902563bbbd110f9a27abcb49_512x512.jpg",
+      "type": "image/jpeg",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0284c7",
+  "background_color": "#ffffff"
+}
