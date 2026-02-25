@@ -11,7 +11,8 @@ import ReagentDeliveryForm from '@/components/ReagentDeliveryForm';
 import ReagentStats from '@/components/ReagentStats';
 import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { supabase } from '@/lib/customSupabaseClient';
+import { supabase } from '@/lib/supabaseClient';
+import { isMobile } from '@/lib/orderUtils';
 
 const ReagentManagement = ({ clients: propClients, deliveries, fetchDeliveries }) => {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -28,8 +29,6 @@ const ReagentManagement = ({ clients: propClients, deliveries, fetchDeliveries }
       setLoading(false);
     }
   }, [propClients, deliveries]);
-  
-  const isMobile = () => typeof window !== 'undefined' && window.innerWidth < 768;
 
   const handleOpenNewDeliveryModal = () => {
     setEditingDelivery(null);

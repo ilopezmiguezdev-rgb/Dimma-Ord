@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Building, Phone, MapPin, Hotel as Hospital, Info } from 'lucide-react';
 import { getInitialData } from '@/components/service-order-form/initialData';
-import { supabase } from '@/lib/customSupabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { motion } from 'framer-motion';
 import { Combobox } from '@/components/ui/combobox';

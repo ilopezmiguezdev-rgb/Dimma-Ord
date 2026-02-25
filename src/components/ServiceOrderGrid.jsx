@@ -1,14 +1,17 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search } from 'lucide-react';
 import ServiceOrderCard from '@/components/ServiceOrderCard';
 
-const ServiceOrderGrid = ({ orders, onEditOrder, onDeleteOrder, onViewDetails, onOpenAttachmentModal }) => {
-  const sortedOrders = [...orders].sort((a, b) => new Date(b.creation_date) - new Date(a.creation_date));
+const ServiceOrderGrid = ({ orders, onEditOrder, onDeleteOrder, onViewDetails }) => {
+  const sortedOrders = useMemo(
+    () => [...orders].sort((a, b) => new Date(b.creation_date) - new Date(a.creation_date)),
+    [orders]
+  );
 
   return (
-    <motion.div 
-      layout 
+    <motion.div
+      layout
       className="w-full"
     >
       {sortedOrders.length > 0 ? (
@@ -22,13 +25,12 @@ const ServiceOrderGrid = ({ orders, onEditOrder, onDeleteOrder, onViewDetails, o
                 onViewDetails={onViewDetails}
                 onEditOrder={onEditOrder}
                 onDeleteOrder={onDeleteOrder}
-                onOpenAttachmentModal={onOpenAttachmentModal}
               />
             ))}
           </AnimatePresence>
         </div>
       ) : (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="text-center py-12"

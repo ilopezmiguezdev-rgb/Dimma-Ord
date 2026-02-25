@@ -1,34 +1,14 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Edit, Trash2, Eye, Paperclip, Calendar, User, Package, AlertTriangle, DollarSign, Truck, Building } from 'lucide-react';
+import { Edit, Trash2, Eye, Calendar, User, Package, AlertTriangle, Building } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { getStatusColor, getOrderTypeColor } from '@/lib/orderUtils';
 
-const getStatusColor = (status) => {
-  switch (status) {
-    case 'Pendiente': return 'bg-amber-500/20 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400 border-amber-500/30';
-    case 'En Progreso': return 'bg-sky-500/20 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400 border-sky-500/30';
-    case 'Completada': return 'bg-emerald-500/20 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 border-emerald-500/30';
-    case 'Facturado': return 'bg-green-600/20 text-green-700 dark:bg-green-500/10 dark:text-green-400 border-green-500/30';
-    case 'Cancelada': return 'bg-red-500/20 text-red-600 dark:bg-red-500/10 dark:text-red-400 border-red-500/30';
-    default: return 'bg-slate-500/20 text-slate-600 dark:bg-slate-500/10 dark:text-slate-400 border-slate-500/30';
-  }
-};
-
-const getOrderTypeColor = (orderType) => {
-  switch (orderType) {
-    case 'Mantenimiento': return 'border-blue-500/50 text-blue-600 dark:text-blue-400';
-    case 'Service': return 'border-amber-500/50 text-amber-600 dark:text-amber-400';
-    case 'Visita': return 'border-indigo-500/50 text-indigo-600 dark:text-indigo-400';
-    case 'Instalacion': return 'border-teal-500/50 text-teal-600 dark:text-teal-400';
-    default: return 'border-slate-400/50 text-slate-500 dark:text-slate-400';
-  }
-};
-
-const ServiceOrderCard = ({ order, index, onViewDetails, onEditOrder, onDeleteOrder, onOpenAttachmentModal }) => {
+const ServiceOrderCard = ({ order, index, onViewDetails, onEditOrder, onDeleteOrder }) => {
   return (
     <motion.div
       layout
@@ -71,7 +51,7 @@ const ServiceOrderCard = ({ order, index, onViewDetails, onEditOrder, onDeleteOr
           )}
         </div>
       </div>
-      
+
       <div className="p-3 mt-auto bg-slate-50 dark:bg-slate-800/30">
         <div className="flex justify-between items-center mb-3">
             <Badge className={`${getStatusColor(order.status)} text-xs font-medium`}>{order.status}</Badge>
@@ -81,18 +61,15 @@ const ServiceOrderCard = ({ order, index, onViewDetails, onEditOrder, onDeleteOr
             </div>
         </div>
         <div className="flex justify-end space-x-1 mt-2">
-          <Button variant="ghost" size="icon" onClick={() => onViewDetails(order)} className="text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300 h-8 w-8" title="Ver Detalles">
+          <Button variant="ghost" size="icon" onClick={() => onViewDetails(order)} aria-label="Ver detalles" className="text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300 h-8 w-8" title="Ver Detalles">
             <Eye className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => onEditOrder(order)} className="text-amber-500 hover:text-amber-400 dark:text-yellow-400 dark:hover:text-yellow-300 h-8 w-8" title="Editar">
+          <Button variant="ghost" size="icon" onClick={() => onEditOrder(order)} aria-label="Editar orden" className="text-amber-500 hover:text-amber-400 dark:text-yellow-400 dark:hover:text-yellow-300 h-8 w-8" title="Editar">
             <Edit className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={() => onOpenAttachmentModal(order)} className="text-indigo-500 hover:text-indigo-400 dark:text-indigo-400 dark:hover:text-indigo-300 h-8 w-8" title="Adjuntar archivo">
-            <Paperclip className="h-4 w-4" />
           </Button>
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-red-600 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400 h-8 w-8" title="Eliminar">
+              <Button variant="ghost" size="icon" aria-label="Eliminar orden" className="text-red-600 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400 h-8 w-8" title="Eliminar">
                 <Trash2 className="h-4 w-4" />
               </Button>
             </DialogTrigger>
@@ -115,4 +92,4 @@ const ServiceOrderCard = ({ order, index, onViewDetails, onEditOrder, onDeleteOr
   );
 };
 
-export default ServiceOrderCard;
+export default React.memo(ServiceOrderCard);

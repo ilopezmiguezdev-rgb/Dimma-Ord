@@ -145,10 +145,10 @@ const ClientEquipmentSection = ({ client, equipment, serviceOrders, reminders, o
     <>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="bg-slate-200/30 dark:bg-slate-900/30 p-4 rounded-xl">
         <div className="flex justify-between items-center mb-4">
-          <h3 onClick={() => onClientSelect(client.id)} className="text-lg font-bold text-slate-700 dark:text-slate-200 flex items-center cursor-pointer hover:text-cyan-500 transition-colors">
+          <button onClick={() => onClientSelect(client.id)} className="text-left text-lg font-bold text-slate-700 dark:text-slate-200 flex items-center cursor-pointer hover:text-cyan-500 transition-colors">
             <Building className="h-5 w-5 mr-3 text-cyan-500" />
             {client.name}
-          </h3>
+          </button>
           <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500/70 hover:text-red-600" onClick={() => setDeleteDialogOpen(true)}>
               <Trash2 className="h-4 w-4" />
           </Button>

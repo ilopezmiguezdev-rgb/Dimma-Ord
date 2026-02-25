@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/components/ui/toaster";
-import { supabase } from '@/lib/customSupabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 import { PlusCircle, Loader2 } from 'lucide-react';
 
 const AddEquipmentModal = ({ isOpen, onClose, onEquipmentAdded, clients, subClients, preselectedClientId, preselectedSubClientId }) => {

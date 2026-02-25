@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/customSupabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 import useDataFetching from '@/hooks/useDataFetching';
 import useServiceOrderFilters from '@/hooks/useServiceOrderFilters';
 import useModalState from '@/hooks/useModalState';
@@ -9,41 +9,49 @@ import { useAuth } from '@/contexts/SupabaseAuthContext';
 
 import AppHeader from '@/components/AppHeader';
 import MainTabs from '@/components/MainTabs';
-import ServiceOrderForm from '@/components/ServiceOrderForm';
-import ServiceOrderDetailsModal from '@/components/ServiceOrderDetailsModal';
 import AddClientModal from '@/components/AddClientModal';
 import { addClient } from '@/config/reagentsData';
 import ClientDetailsPage from '@/components/ClientDetailsPage';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
+
+import LoginPage from '@/components/auth/LoginPage';
+import SignUpPage from '@/components/auth/SignUpPage';
+import ForgotPasswordPage from '@/components/auth/ForgotPasswordPage';
+import UpdatePasswordPage from '@/components/auth/UpdatePasswordPage';
+import ProfilePage from '@/components/auth/ProfilePage';
+
+const ServiceOrderForm = lazy(() => import('@/components/ServiceOrderForm'));
+const ServiceOrderDetailsModal = lazy(() => import('@/components/ServiceOrderDetailsModal'));
 
 import { v4 as uuidv4 } from 'uuid';
 
 const App = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { profile } = useAuth();
-  
+  const { user, profile, signOut } = useAuth();
+
   const [activeTab, setActiveTab] = useState("equipmentStatus");
   const [isAddClientModalOpen, setAddClientModalOpen] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState(null);
 
-  const { 
-    clients, 
-    serviceOrders, 
-    deliveries, 
+  const {
+    clients,
+    serviceOrders,
+    deliveries,
     equipment,
-    reminders, 
-    loading: dataLoading, 
+    reminders,
+    loading: dataLoading,
     refreshData
-  } = useDataFetching(true);
-  
-  const { 
-    formModal, 
-    detailsModal, 
-    currentOrder, 
-    handleAddNewOrder, 
-    handleEditOrder, 
-    handleViewDetails, 
-    closeAllModals 
+  } = useDataFetching(!!user);
+
+  const {
+    formModal,
+    detailsModal,
+    currentOrder,
+    handleAddNewOrder,
+    handleEditOrder,
+    handleViewDetails,
+    closeAllModals
   } = useModalState();
 
   const {
@@ -64,7 +72,7 @@ const App = () => {
       setActiveTab('serviceOrders');
     }
   }, [location.search, setEquipmentSerialFilter]);
-  
+
   const handleClientSelect = (clientId) => {
     setSelectedClientId(clientId);
     navigate(`/client/${clientId}`);
@@ -76,11 +84,11 @@ const App = () => {
     navigate('/');
     setActiveTab('equipmentStatus');
   };
-  
+
   const handleEquipmentUpdate = useCallback(() => {
     refreshData('equipment');
     refreshData('clients');
-    refreshData('serviceOrders'); // Refresh orders in case equipment details changed
+    refreshData('serviceOrders');
   }, [refreshData]);
 
   useEffect(() => {
@@ -94,6 +102,7 @@ const App = () => {
   }, [location]);
 
   useEffect(() => {
+    if (!user) return;
     const channels = [
       supabase.channel('service_orders_realtime_app').on('postgres_changes', { event: '*', schema: 'public', table: 'service_orders' }, () => refreshData('serviceOrders')).subscribe(),
       supabase.channel('clients_realtime_app').on('postgres_changes', { event: '*', schema: 'public', table: 'clients' }, () => refreshData('clients')).subscribe(),
@@ -106,8 +115,13 @@ const App = () => {
       channels.forEach(channel => {
         supabase.removeChannel(channel).catch(console.error);
       });
-    }
-  }, [refreshData, handleEquipmentUpdate]);
+    };
+  }, [user, refreshData, handleEquipmentUpdate]);
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/login');
+  };
 
   const handleDeleteOrder = async (orderId) => {
     const { error } = await supabase.from('service_orders').delete().match({ id: orderId });
@@ -117,12 +131,12 @@ const App = () => {
       toast({ title: "Orden Eliminada", description: `La orden de servicio ha sido eliminada.`, variant: "destructive" });
     }
   };
-  
+
   const sanitizeNumeric = (value) => {
     const num = parseFloat(value);
     return isNaN(num) ? null : num;
   };
-  
+
   const sanitizeInteger = (value) => {
     const num = parseInt(value, 10);
     return isNaN(num) ? null : num;
@@ -159,7 +173,7 @@ const App = () => {
     } else {
         subClientId = null;
     }
-    
+
     const orderPayload = {
       client_id: finalClientId,
       client_name: finalClientName,
@@ -205,14 +219,14 @@ const App = () => {
       if (error) toast({ title: "Error al crear orden", description: error.message, variant: "destructive" });
       else if (data) toast({ title: "¡Orden Creada! 🚀", description: `Nueva orden de servicio agregada.` });
     }
-    
+
     closeAllModals();
   };
 
   const handleSaveNewClient = async (clientData) => {
     const newClient = await addClient(clientData);
     if (newClient) {
-      toast({ title: "Cliente Agregado", description: `El cliente "${newClient.name}" ha sido creado.`, });
+      toast({ title: "Cliente Agregado", description: `El cliente "${newClient.name}" ha sido creado.` });
       setAddClientModalOpen(false);
     }
   };
@@ -220,8 +234,8 @@ const App = () => {
   const logoUrl = "https://horizons-cdn.hostinger.com/3ce3d85f-4f57-4c75-9f23-346da62300fc/1d5487d0103b1ec9f0ebb6131f7ae9fb.jpg";
   const selectedClientData = clients.find(c => c.id === selectedClientId);
 
-  return (
-    <div className="min-h-screen bg-slate-100 dark:bg-background text-foreground p-2 sm:p-4 md:p-8">
+  const ProtectedLayout = ({ children }) => (
+    <>
       <AppHeader
         logoUrl={logoUrl}
         onAddNewOrder={handleAddNewOrder}
@@ -238,64 +252,90 @@ const App = () => {
         serviceOrders={serviceOrders}
         isMainAppScreen={!selectedClientId && activeTab === 'serviceOrders'}
         profile={profile}
-        onLogout={() => {}}
+        onLogout={handleLogout}
       />
-      <main>
-        <Routes>
-          <Route path="/" element={
-            <MainTabs
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              loading={dataLoading}
-              filteredOrders={filteredOrders}
-              handleEditOrder={handleEditOrder}
-              handleDeleteOrder={handleDeleteOrder}
-              handleViewDetails={handleViewDetails}
-              clients={clients}
-              serviceOrders={serviceOrders}
-              deliveries={deliveries}
-              fetchDeliveries={() => refreshData('deliveries')}
-              equipment={equipment}
-              reminders={reminders}
-              onEquipmentUpdate={handleEquipmentUpdate}
-              handleClientSelect={handleClientSelect}
-            />
-          } />
-          <Route path="/client/:clientId" element={
-            <ClientDetailsPage 
-              client={selectedClientData}
-              serviceOrders={serviceOrders}
-              deliveries={deliveries}
-              reminders={reminders}
-              onBack={handleBackToDashboard}
-              loading={dataLoading}
-            />
-          }/>
-        </Routes>
-      </main>
-
-      <ServiceOrderForm
-        isOpen={formModal.isOpen}
-        onClose={closeAllModals}
-        onSave={handleSaveOrder}
-        existingOrder={currentOrder}
-        clients={clients}
-        onAddNewClient={() => setAddClientModalOpen(true)}
-        onEquipmentUpdate={handleEquipmentUpdate}
-      />
+      <main>{children}</main>
+      <Suspense fallback={null}>
+        <ServiceOrderForm
+          isOpen={formModal.isOpen}
+          onClose={closeAllModals}
+          onSave={handleSaveOrder}
+          existingOrder={currentOrder}
+          clients={clients}
+          onAddNewClient={() => setAddClientModalOpen(true)}
+          onEquipmentUpdate={handleEquipmentUpdate}
+        />
+      </Suspense>
       <AddClientModal
         isOpen={isAddClientModalOpen}
         onClose={() => setAddClientModalOpen(false)}
         onSave={handleSaveNewClient}
       />
       {detailsModal.isOpen && (
-        <ServiceOrderDetailsModal
-          order={currentOrder}
-          isOpen={detailsModal.isOpen}
-          onClose={closeAllModals}
-          logoUrl={logoUrl}
-        />
+        <Suspense fallback={null}>
+          <ServiceOrderDetailsModal
+            order={currentOrder}
+            isOpen={detailsModal.isOpen}
+            onClose={closeAllModals}
+            logoUrl={logoUrl}
+          />
+        </Suspense>
       )}
+    </>
+  );
+
+  return (
+    <div className="min-h-screen bg-slate-100 dark:bg-background text-foreground p-2 sm:p-4 md:p-8">
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignUpPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/update-password" element={<UpdatePasswordPage />} />
+        <Route path="/" element={
+          <ProtectedRoute>
+            <ProtectedLayout>
+              <MainTabs
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                loading={dataLoading}
+                filteredOrders={filteredOrders}
+                handleEditOrder={handleEditOrder}
+                handleDeleteOrder={handleDeleteOrder}
+                handleViewDetails={handleViewDetails}
+                clients={clients}
+                serviceOrders={serviceOrders}
+                deliveries={deliveries}
+                fetchDeliveries={() => refreshData('deliveries')}
+                equipment={equipment}
+                reminders={reminders}
+                onEquipmentUpdate={handleEquipmentUpdate}
+                handleClientSelect={handleClientSelect}
+              />
+            </ProtectedLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/client/:clientId" element={
+          <ProtectedRoute>
+            <ProtectedLayout>
+              <ClientDetailsPage
+                client={selectedClientData}
+                serviceOrders={serviceOrders}
+                deliveries={deliveries}
+                reminders={reminders}
+                onBack={handleBackToDashboard}
+                loading={dataLoading}
+              />
+            </ProtectedLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <ProtectedLayout>
+              <ProfilePage />
+            </ProtectedLayout>
+          </ProtectedRoute>
+        } />
+      </Routes>
     </div>
   );
 };

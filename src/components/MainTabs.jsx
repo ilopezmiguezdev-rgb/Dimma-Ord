@@ -1,13 +1,18 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Wrench, Droplets, BarChart3, AlertCircle, MapPinned, HardDrive } from 'lucide-react';
 import ServiceOrderGrid from '@/components/ServiceOrderGrid';
-import ReagentManagement from '@/components/ReagentManagement';
-import AdvancedStatsPage from '@/components/AdvancedStatsPage';
-import RemindersPage from '@/components/RemindersPage';
-import RouteTrackingPage from '@/components/RouteTrackingPage';
-import EquipmentStatusPage from '@/components/EquipmentStatusPage';
 import { useLocation } from 'react-router-dom';
+
+const EquipmentStatusPage = lazy(() => import('@/components/EquipmentStatusPage'));
+const ReagentManagement = lazy(() => import('@/components/ReagentManagement'));
+const AdvancedStatsPage = lazy(() => import('@/components/AdvancedStatsPage'));
+const RemindersPage = lazy(() => import('@/components/RemindersPage'));
+const RouteTrackingPage = lazy(() => import('@/components/RouteTrackingPage'));
+
+const TabLoader = () => (
+  <div className="text-center py-10 text-lg text-sky-500">Cargando...</div>
+);
 
 const MainTabs = ({
   activeTab,
@@ -56,19 +61,21 @@ const MainTabs = ({
           </TabsTrigger>
         </TabsList>
       </div>
-      
+
       <TabsContent value="equipmentStatus">
-          <EquipmentStatusPage 
-            clients={clients} 
-            equipment={equipment} 
-            serviceOrders={serviceOrders} 
+        <Suspense fallback={<TabLoader />}>
+          <EquipmentStatusPage
+            clients={clients}
+            equipment={equipment}
+            serviceOrders={serviceOrders}
             deliveries={deliveries}
-            reminders={reminders} 
-            loading={loading} 
+            reminders={reminders}
+            loading={loading}
             onEquipmentUpdate={onEquipmentUpdate}
             onClientSelect={handleClientSelect}
           />
-       </TabsContent>
+        </Suspense>
+      </TabsContent>
 
       <TabsContent value="serviceOrders">
         {loading ? (
@@ -79,22 +86,29 @@ const MainTabs = ({
             onEditOrder={handleEditOrder}
             onDeleteOrder={handleDeleteOrder}
             onViewDetails={handleViewDetails}
-            onOpenAttachmentModal={handleEditOrder}
           />
         )}
       </TabsContent>
 
       <TabsContent value="reagents">
-        <ReagentManagement clients={clients} deliveries={deliveries} fetchDeliveries={fetchDeliveries} />
+        <Suspense fallback={<TabLoader />}>
+          <ReagentManagement clients={clients} deliveries={deliveries} fetchDeliveries={fetchDeliveries} />
+        </Suspense>
       </TabsContent>
       <TabsContent value="reminders">
-        <RemindersPage clients={clients} equipment={equipment} />
+        <Suspense fallback={<TabLoader />}>
+          <RemindersPage clients={clients} equipment={equipment} />
+        </Suspense>
       </TabsContent>
       <TabsContent value="routeTracking">
-        <RouteTrackingPage clients={clients} loading={loading} />
+        <Suspense fallback={<TabLoader />}>
+          <RouteTrackingPage clients={clients} loading={loading} />
+        </Suspense>
       </TabsContent>
       <TabsContent value="advancedStats">
-        <AdvancedStatsPage serviceOrders={serviceOrders} clients={clients} deliveries={deliveries} />
+        <Suspense fallback={<TabLoader />}>
+          <AdvancedStatsPage serviceOrders={serviceOrders} clients={clients} deliveries={deliveries} />
+        </Suspense>
       </TabsContent>
     </Tabs>
   );

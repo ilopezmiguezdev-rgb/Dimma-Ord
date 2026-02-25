@@ -1,39 +1,18 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Edit, Trash2, Eye, User, Package, Search, AlertTriangle, Paperclip, Calendar, Building } from 'lucide-react';
+import { Edit, Trash2, Eye, User, Package, Search, AlertTriangle, Calendar, Building } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { getStatusColorSolid as getStatusColor, getPriorityColor, isMobile } from '@/lib/orderUtils';
 
-const getStatusColor = (status) => {
-  switch (status) {
-    case 'Pendiente': return 'bg-amber-500 hover:bg-amber-600';
-    case 'En Progreso': return 'bg-sky-500 hover:bg-sky-600';
-    case 'Completada': return 'bg-emerald-500 hover:bg-emerald-600';
-    case 'Facturado': return 'bg-green-600 hover:bg-green-700';
-    case 'Cancelado': return 'bg-red-500 hover:bg-red-600';
-    default: return 'bg-slate-500 hover:bg-slate-600';
-  }
-};
-
-const getPriorityColor = (priority) => {
-  switch (priority) {
-    case 'Alta': return 'border-red-500 text-red-500 dark:border-red-400 dark:text-red-400';
-    case 'Media': return 'border-amber-500 text-amber-500 dark:border-amber-400 dark:text-amber-400';
-    case 'Baja': return 'border-emerald-500 text-emerald-500 dark:border-emerald-400 dark:text-emerald-400';
-    default: return 'border-slate-400 text-slate-400 dark:border-slate-500 dark:text-slate-500';
-  }
-};
-
-const ServiceOrderTable = ({ orders, onEditOrder, onDeleteOrder, onViewDetails, onOpenAttachmentModal }) => {
-  const isMobile = () => typeof window !== 'undefined' && window.innerWidth < 768;
-
+const ServiceOrderTable = ({ orders, onEditOrder, onDeleteOrder, onViewDetails }) => {
   return (
-    <motion.div 
-      layout 
+    <motion.div
+      layout
       className="bg-slate-100/50 dark:bg-slate-800/50 backdrop-blur-md shadow-2xl rounded-xl p-2 md:p-6 border border-sky-500/30"
     >
       {orders.length > 0 ? (
@@ -65,18 +44,15 @@ const ServiceOrderTable = ({ orders, onEditOrder, onDeleteOrder, onViewDetails, 
                     <p>Prioridad: <span className={`${getPriorityColor(order.priority).split(' ')[1]} ${getPriorityColor(order.priority).split(' ')[2]}`}>{order.priority}</span></p>
                   </div>
                   <div className="flex justify-end space-x-1 mt-1">
-                    <Button variant="ghost" size="icon" onClick={() => onViewDetails(order)} className="text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300 h-8 w-8">
+                    <Button variant="ghost" size="icon" onClick={() => onViewDetails(order)} aria-label="Ver detalles" className="text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300 h-8 w-8">
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => onEditOrder(order)} className="text-amber-500 hover:text-amber-400 dark:text-yellow-400 dark:hover:text-yellow-300 h-8 w-8">
+                    <Button variant="ghost" size="icon" onClick={() => onEditOrder(order)} aria-label="Editar orden" className="text-amber-500 hover:text-amber-400 dark:text-yellow-400 dark:hover:text-yellow-300 h-8 w-8">
                       <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => onOpenAttachmentModal(order)} className="text-indigo-500 hover:text-indigo-400 dark:text-indigo-400 dark:hover:text-indigo-300 h-8 w-8" title="Adjuntar archivo">
-                      <Paperclip className="h-4 w-4" />
                     </Button>
                      <Dialog>
                       <DialogTrigger asChild>
-                        <Button variant="ghost" size="icon" className="text-red-600 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400 h-8 w-8">
+                        <Button variant="ghost" size="icon" aria-label="Eliminar orden" className="text-red-600 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400 h-8 w-8">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </DialogTrigger>
@@ -113,7 +89,7 @@ const ServiceOrderTable = ({ orders, onEditOrder, onDeleteOrder, onViewDetails, 
             <TableBody>
               <AnimatePresence>
                 {orders.map((order, index) => (
-                  <motion.tr 
+                  <motion.tr
                     key={order.id}
                     layout
                     initial={{ opacity: 0, y: 20 }}
@@ -140,18 +116,15 @@ const ServiceOrderTable = ({ orders, onEditOrder, onDeleteOrder, onViewDetails, 
                       <Badge variant="outline" className={`${getPriorityColor(order.priority)} text-xs px-3 py-1`}>{order.priority}</Badge>
                     </TableCell>
                     <TableCell className="text-right py-3 space-x-1">
-                      <Button variant="ghost" size="icon" onClick={() => onViewDetails(order)} className="text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300">
+                      <Button variant="ghost" size="icon" onClick={() => onViewDetails(order)} aria-label="Ver detalles" className="text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300">
                         <Eye className="h-5 w-5" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => onEditOrder(order)} className="text-amber-500 hover:text-amber-400 dark:text-yellow-400 dark:hover:text-yellow-300">
+                      <Button variant="ghost" size="icon" onClick={() => onEditOrder(order)} aria-label="Editar orden" className="text-amber-500 hover:text-amber-400 dark:text-yellow-400 dark:hover:text-yellow-300">
                         <Edit className="h-5 w-5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => onOpenAttachmentModal(order)} className="text-indigo-500 hover:text-indigo-400 dark:text-indigo-400 dark:hover:text-indigo-300" title="Adjuntar archivo">
-                        <Paperclip className="h-5 w-5" />
                       </Button>
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="text-red-600 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400">
+                          <Button variant="ghost" size="icon" aria-label="Eliminar orden" className="text-red-600 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400">
                             <Trash2 className="h-5 w-5" />
                           </Button>
                         </DialogTrigger>
@@ -176,7 +149,7 @@ const ServiceOrderTable = ({ orders, onEditOrder, onDeleteOrder, onViewDetails, 
           </Table>
         )
       ) : (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="text-center py-12"

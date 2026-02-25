@@ -1,28 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Eye, X, Printer, Building, Package, AlertTriangle, Wrench, DollarSign, Clock, Hash, Truck, Hotel as Hospital } from 'lucide-react';
+import { Eye, X, Printer, Building, Package, AlertTriangle, Wrench, Clock, Hash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-
-const getStatusColor = (status) => {
-  switch (status) {
-    case 'Pendiente': return 'bg-amber-500 hover:bg-amber-600';
-    case 'En Progreso': return 'bg-sky-500 hover:bg-sky-600';
-    case 'Completada': return 'bg-emerald-500 hover:bg-emerald-600';
-    case 'Cancelada': return 'bg-red-500 hover:bg-red-600';
-    default: return 'bg-slate-500 hover:bg-slate-600';
-  }
-};
-
-const getPriorityColor = (priority) => {
-  switch (priority) {
-    case 'Alta': return 'border-red-500 text-red-500 dark:border-red-400 dark:text-red-400';
-    case 'Media': return 'border-amber-500 text-amber-500 dark:border-amber-400 dark:text-amber-400';
-    case 'Baja': return 'border-emerald-500 text-emerald-500 dark:border-emerald-400 dark:text-emerald-400';
-    default: return 'border-slate-400 text-slate-400 dark:border-slate-500 dark:text-slate-500';
-  }
-};
+import { getStatusColorSolid as getStatusColor, getPriorityColor } from '@/lib/orderUtils';
 
 const ServiceOrderDetailsModal = ({ order, isOpen, onClose, logoUrl }) => {
   if (!order) return null;

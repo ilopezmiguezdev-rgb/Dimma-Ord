@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/customSupabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 import { toast } from "@/components/ui/use-toast";
 
 export const addClient = async (newClient) => {

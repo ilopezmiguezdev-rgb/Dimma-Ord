@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Hotel as Hospital, MapPin, Loader2 } from 'lucide-react';
 import { toast } from "@/components/ui/toaster";
-import { supabase } from '@/lib/customSupabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 const AddSubClientModal = ({ isOpen, onClose, onSubClientAdded, clientId }) => {
   const [name, setName] = useState('');
