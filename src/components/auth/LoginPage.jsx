@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const logoUrl = "https://i.imgur.com/J4o52p1.png";
 
@@ -35,7 +36,7 @@ const LoginPage = () => {
         title: `¡Bienvenido de nuevo! 👋`,
         description: "Has iniciado sesión correctamente.",
       });
-      navigate('/');
+      navigate(location.state?.from?.pathname || '/', { replace: true });
     }
   };
 

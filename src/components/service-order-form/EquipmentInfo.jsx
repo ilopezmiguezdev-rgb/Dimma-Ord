@@ -6,9 +6,12 @@ import { Button } from "@/components/ui/button";
 import { HardDrive, Loader2, PlusCircle, Package, Hash, Tag, Type } from 'lucide-react';
 
 const EquipmentInfo = ({ formData, setFormData, clientEquipment, isFetchingEquipment, onAddNewEquipment }) => {
-  
+  const filteredEquipment = formData.sub_client_id
+    ? clientEquipment.filter(e => e.sub_client_id === formData.sub_client_id)
+    : clientEquipment;
+
   const handleEquipmentChange = (equipmentId) => {
-    const selected = clientEquipment.find(e => e.id === equipmentId);
+    const selected = filteredEquipment.find(e => e.id === equipmentId);
     if (selected) {
       setFormData(prev => ({
         ...prev,
@@ -55,7 +58,7 @@ const EquipmentInfo = ({ formData, setFormData, clientEquipment, isFetchingEquip
                   </div>
                 </SelectTrigger>
                 <SelectContent>
-                    {clientEquipment.length > 0 ? clientEquipment.map(e => (
+                    {filteredEquipment.length > 0 ? filteredEquipment.map(e => (
                         <SelectItem key={e.id} value={e.id}>
                             {e.equipment_models.brand} {e.equipment_models.model_name} (S/N: {e.serial_number})
                         </SelectItem>

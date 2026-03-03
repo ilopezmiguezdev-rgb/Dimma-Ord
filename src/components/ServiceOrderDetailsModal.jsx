@@ -5,8 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getStatusColorSolid as getStatusColor, getPriorityColor } from '@/lib/orderUtils';
+import usePermissions from '@/hooks/usePermissions';
 
 const ServiceOrderDetailsModal = ({ order, isOpen, onClose, logoUrl }) => {
+  const { canViewCosts } = usePermissions();
   if (!order) return null;
 
   const handlePrint = () => {
@@ -99,12 +101,14 @@ const ServiceOrderDetailsModal = ({ order, isOpen, onClose, logoUrl }) => {
     }
     printWindow.document.write('</div>');
 
-    printWindow.document.write('<div class="costs-summary print-section"><h3>Resumen de Costos</h3>');
-    printWindow.document.write(`<p><strong>Costo Mano de Obra:</strong> ${(order.labor_cost || 0).toFixed(2)}</p>`);
-    printWindow.document.write(`<p><strong>Costo Repuestos:</strong> ${(order.parts_cost || 0).toFixed(2)}</p>`);
-    printWindow.document.write(`<p><strong>Costo Traslado:</strong> ${(order.transport_cost || 0).toFixed(2)}</p>`);
-    printWindow.document.write(`<p class="total-cost"><strong>Costo Total:</strong> ${(order.total_cost || 0).toFixed(2)}</p>`);
-    printWindow.document.write('</div>');
+    if (canViewCosts) {
+      printWindow.document.write('<div class="costs-summary print-section"><h3>Resumen de Costos</h3>');
+      printWindow.document.write(`<p><strong>Costo Mano de Obra:</strong> ${(order.labor_cost || 0).toFixed(2)}</p>`);
+      printWindow.document.write(`<p><strong>Costo Repuestos:</strong> ${(order.parts_cost || 0).toFixed(2)}</p>`);
+      printWindow.document.write(`<p><strong>Costo Traslado:</strong> ${(order.transport_cost || 0).toFixed(2)}</p>`);
+      printWindow.document.write(`<p class="total-cost"><strong>Costo Total:</strong> ${(order.total_cost || 0).toFixed(2)}</p>`);
+      printWindow.document.write('</div>');
+    }
     
     let statusClass = 'status-default';
     if (order.status === 'Pendiente') statusClass = 'status-pendiente';
@@ -211,24 +215,26 @@ const ServiceOrderDetailsModal = ({ order, isOpen, onClose, logoUrl }) => {
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-6 border-t border-sky-500/30">
-                <div className="bg-slate-200/50 dark:bg-slate-700/50 p-4 rounded-lg">
-                    <p className="text-xs text-sky-700 dark:text-sky-300 uppercase">Mano de Obra</p>
-                    <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">${(order.labor_cost || 0).toFixed(2)}</p>
-                </div>
-                <div className="bg-slate-200/50 dark:bg-slate-700/50 p-4 rounded-lg">
-                    <p className="text-xs text-sky-700 dark:text-sky-300 uppercase">Repuestos</p>
-                    <p className="text-lg font-bold text-blue-600 dark:text-blue-400">${(order.parts_cost || 0).toFixed(2)}</p>
-                </div>
-                <div className="bg-slate-200/50 dark:bg-slate-700/50 p-4 rounded-lg">
-                    <p className="text-xs text-sky-700 dark:text-sky-300 uppercase">Traslado</p>
-                    <p className="text-lg font-bold text-indigo-600 dark:text-indigo-400">${(order.transport_cost || 0).toFixed(2)}</p>
-                </div>
-                <div className="bg-teal-500/20 dark:bg-teal-600/30 p-4 rounded-lg text-center ring-2 ring-teal-500 md:col-span-2">
-                    <p className="text-sm text-teal-700 dark:text-teal-200 uppercase font-semibold">Costo Total</p>
-                    <p className="text-2xl font-bold text-teal-600 dark:text-teal-300">${(order.total_cost || 0).toFixed(2)}</p>
-                </div>
-            </div>
+            {canViewCosts && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-6 border-t border-sky-500/30">
+                  <div className="bg-slate-200/50 dark:bg-slate-700/50 p-4 rounded-lg">
+                      <p className="text-xs text-sky-700 dark:text-sky-300 uppercase">Mano de Obra</p>
+                      <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">${(order.labor_cost || 0).toFixed(2)}</p>
+                  </div>
+                  <div className="bg-slate-200/50 dark:bg-slate-700/50 p-4 rounded-lg">
+                      <p className="text-xs text-sky-700 dark:text-sky-300 uppercase">Repuestos</p>
+                      <p className="text-lg font-bold text-blue-600 dark:text-blue-400">${(order.parts_cost || 0).toFixed(2)}</p>
+                  </div>
+                  <div className="bg-slate-200/50 dark:bg-slate-700/50 p-4 rounded-lg">
+                      <p className="text-xs text-sky-700 dark:text-sky-300 uppercase">Traslado</p>
+                      <p className="text-lg font-bold text-indigo-600 dark:text-indigo-400">${(order.transport_cost || 0).toFixed(2)}</p>
+                  </div>
+                  <div className="bg-teal-500/20 dark:bg-teal-600/30 p-4 rounded-lg text-center ring-2 ring-teal-500 md:col-span-2">
+                      <p className="text-sm text-teal-700 dark:text-teal-200 uppercase font-semibold">Costo Total</p>
+                      <p className="text-2xl font-bold text-teal-600 dark:text-teal-300">${(order.total_cost || 0).toFixed(2)}</p>
+                  </div>
+              </div>
+            )}
 
             <div className="mt-6 text-xs text-slate-500 dark:text-slate-400">
               <p><strong className="text-slate-600 dark:text-slate-300">Técnico Asignado:</strong> {order.assigned_technician || 'N/A'}</p>

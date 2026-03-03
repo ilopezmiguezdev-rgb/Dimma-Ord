@@ -13,6 +13,7 @@ const useServiceOrderFilters = (orders) => {
   const [dateFilter, setDateFilter] = useState(searchParams.get('period') || 'all');
   const [equipmentSerialFilter, setEquipmentSerialFilter] = useState(searchParams.get('equipment_serial') || '');
   const [technicianFilter, setTechnicianFilter] = useState(searchParams.get('technician') || 'Todos');
+  const [reportedIssueFilter, setReportedIssueFilterState] = useState(searchParams.get('reported_issue') || '');
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -22,6 +23,7 @@ const useServiceOrderFilters = (orders) => {
     setDateFilter(params.get('period') || 'all');
     setEquipmentSerialFilter(params.get('equipment_serial') || '');
     setTechnicianFilter(params.get('technician') || 'Todos');
+    setReportedIssueFilterState(params.get('reported_issue') || '');
   }, [location.search]);
 
   const updateURLParams = (key, value, reset = false) => {
@@ -83,6 +85,13 @@ const useServiceOrderFilters = (orders) => {
       filtered = filtered.filter(order => order.assigned_technician === technicianFilter);
     }
 
+    if (reportedIssueFilter) {
+      const lower = reportedIssueFilter.toLowerCase();
+      filtered = filtered.filter(
+        order => order.reported_issue && order.reported_issue.toLowerCase().includes(lower)
+      );
+    }
+
     if (dateFilter && dateFilter !== 'all') {
       let startDate;
       const now = new Date();
@@ -100,7 +109,12 @@ const useServiceOrderFilters = (orders) => {
     }
     
     return filtered.sort((a, b) => new Date(b.creation_date) - new Date(a.creation_date));
-  }, [orders, searchTerm, statusFilter, priorityFilter, dateFilter, equipmentSerialFilter, technicianFilter]);
+  }, [orders, searchTerm, statusFilter, priorityFilter, dateFilter, equipmentSerialFilter, technicianFilter, reportedIssueFilter]);
+
+  const handleSetReportedIssueFilter = (value) => {
+    setReportedIssueFilterState(value);
+    updateURLParams('reported_issue', value);
+  };
 
   return {
     searchTerm,
@@ -115,6 +129,8 @@ const useServiceOrderFilters = (orders) => {
     setTechnicianFilter: (value) => updateURLParams('technician', value),
     equipmentSerialFilter,
     setEquipmentSerialFilter: handleSetEquipmentSerialFilter,
+    reportedIssueFilter,
+    setReportedIssueFilter: handleSetReportedIssueFilter,
     filteredOrders,
   };
 };

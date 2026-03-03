@@ -7,6 +7,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { User, Save } from 'lucide-react';
+import UserManagement from '@/components/UserManagement';
 
 const ProfilePage = () => {
   const { user, profile, refreshProfile } = useAuth();
@@ -78,6 +79,9 @@ const ProfilePage = () => {
             </Button>
           </div>
         </form>
+      </div>
+      <div className="bg-card p-8 rounded-lg shadow-lg border mt-6">
+        <UserManagement />
       </div>
     </motion.div>
   );

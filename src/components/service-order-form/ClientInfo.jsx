@@ -24,36 +24,26 @@ const ClientInfo = ({ formData, clients, subClients, setFormData, onAddNewClient
     const client = clients.find(c => c.name.toLowerCase() === clientName.toLowerCase());
     const clientId = client ? client.id : null;
     const initialData = getInitialData();
-    
+
     let lastContact = '';
-    let lastLocation = '';
-    let lastSubClientName = '';
-    let lastSubClientId = null;
-    
+
     if (client) {
-        const query = supabase
+        const { data: lastOrder } = await supabase
             .from('service_orders')
-            .select('client_contact, client_location, sub_client_id, sub_client_name')
+            .select('client_contact')
             .eq('client_id', clientId)
             .order('creation_date', { ascending: false })
             .limit(1)
             .single();
 
-        const { data: lastOrder } = await query;
-        
         if (lastOrder) {
             lastContact = lastOrder.client_contact || '';
-            if (client.name.toLowerCase() === 'coech') {
-                lastLocation = lastOrder.client_location || '';
-                lastSubClientName = lastOrder.sub_client_name || '';
-                lastSubClientId = lastOrder.sub_client_id || null;
-            }
         }
     }
 
     setFormData(prev => ({
       ...initialData,
-      id: prev.id, 
+      id: prev.id,
       creation_date: prev.creation_date,
       assigned_technician: prev.assigned_technician,
       status: prev.status,
@@ -61,9 +51,6 @@ const ClientInfo = ({ formData, clients, subClients, setFormData, onAddNewClient
       client_id: clientId,
       clientName: client ? client.name : '',
       clientContact: lastContact,
-      sub_client_name: lastSubClientName,
-      sub_client_id: lastSubClientId,
-      clientLocation: lastLocation,
       equipment_id: null,
       equipmentSerial: '',
       equipmentBrand: '',

@@ -13,6 +13,7 @@ const AddEquipmentModal = ({ isOpen, onClose, onEquipmentAdded, clients, subClie
     
     const [selectedClientId, setSelectedClientId] = useState('');
     const [selectedSubClientId, setSelectedSubClientId] = useState('');
+    const [localSubClients, setLocalSubClients] = useState([]);
     const [serialNumber, setSerialNumber] = useState('');
     const [installationDate, setInstallationDate] = useState('');
     
@@ -41,11 +42,25 @@ const AddEquipmentModal = ({ isOpen, onClose, onEquipmentAdded, clients, subClie
         if(selectedClientId !== preselectedClientId) {
              setSelectedSubClientId('');
         }
+        const fetchSubClients = async () => {
+            if (!selectedClientId) {
+                setLocalSubClients([]);
+                return;
+            }
+            const { data, error } = await supabase
+                .from('sub_clients')
+                .select('id, name, address')
+                .eq('client_id', selectedClientId)
+                .order('name');
+            if (!error) setLocalSubClients(data || []);
+        };
+        fetchSubClients();
     }, [selectedClientId, preselectedClientId]);
 
     const resetForm = () => {
         setSelectedClientId('');
         setSelectedSubClientId('');
+        setLocalSubClients([]);
         setSerialNumber('');
         setInstallationDate('');
         setIsAddingType(false);
@@ -77,7 +92,7 @@ const AddEquipmentModal = ({ isOpen, onClose, onEquipmentAdded, clients, subClie
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!selectedClientId || !typeId || !brand || !modelName || !serialNumber) {
+        if (!selectedClientId || !selectedSubClientId || !typeId || !brand || !modelName || !serialNumber) {
             toast({ title: "Error de validación", description: "Todos los campos marcados con * son obligatorios.", variant: "destructive" });
             return;
         }
@@ -98,13 +113,12 @@ const AddEquipmentModal = ({ isOpen, onClose, onEquipmentAdded, clients, subClie
 
         // 2. Insert Equipment
         const payload = {
-            client_id: selectedClientId,
-            sub_client_id: selectedSubClientId || null,
+            sub_client_id: selectedSubClientId,
             model_id: modelData.id,
             serial_number: serialNumber,
             installation_date: installationDate || new Date().toISOString().split('T')[0],
         };
-        const { data: newEquipment, error: equipmentError } = await supabase.from('equipment_inventory').insert([payload]).select('*, equipment_models(*, equipment_types(*)), sub_clients(id, name)').single();
+        const { data: newEquipment, error: equipmentError } = await supabase.from('equipment_inventory').insert([payload]).select('*, equipment_models(*, equipment_types(*)), sub_clients(id, name, client_id)').single();
         setIsLoading(false);
 
         if (equipmentError) {
@@ -138,11 +152,14 @@ const AddEquipmentModal = ({ isOpen, onClose, onEquipmentAdded, clients, subClie
                     </div>
 
                     <div>
-                        <Label htmlFor="subclient">Laboratorio / Clínica (Opcional)</Label>
+                        <Label htmlFor="subclient">Laboratorio / Clínica *</Label>
                         <Select value={selectedSubClientId} onValueChange={setSelectedSubClientId} disabled={!selectedClientId}>
                             <SelectTrigger><SelectValue placeholder="Seleccionar laboratorio" /></SelectTrigger>
                             <SelectContent>
-                                {Array.isArray(subClients) && subClients.map(sc => <SelectItem key={sc.id} value={sc.id}>{sc.name}</SelectItem>)}
+                                {localSubClients.length > 0
+                                    ? localSubClients.map(sc => <SelectItem key={sc.id} value={sc.id}>{sc.name}</SelectItem>)
+                                    : Array.isArray(subClients) && subClients.map(sc => <SelectItem key={sc.id} value={sc.id}>{sc.name}</SelectItem>)
+                                }
                             </SelectContent>
                         </Select>
                     </div>

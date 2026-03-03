@@ -15,7 +15,6 @@ import ClientDetailsPage from '@/components/ClientDetailsPage';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 import LoginPage from '@/components/auth/LoginPage';
-import SignUpPage from '@/components/auth/SignUpPage';
 import ForgotPasswordPage from '@/components/auth/ForgotPasswordPage';
 import UpdatePasswordPage from '@/components/auth/UpdatePasswordPage';
 import ProfilePage from '@/components/auth/ProfilePage';
@@ -39,7 +38,6 @@ const App = () => {
     serviceOrders,
     deliveries,
     equipment,
-    reminders,
     loading: dataLoading,
     refreshData
   } = useDataFetching(!!user);
@@ -61,7 +59,8 @@ const App = () => {
     dateFilter, setDateFilter,
     technicianFilter, setTechnicianFilter,
     filteredOrders,
-    setEquipmentSerialFilter
+    setEquipmentSerialFilter,
+    reportedIssueFilter, setReportedIssueFilter,
   } = useServiceOrderFilters(serviceOrders);
 
   useEffect(() => {
@@ -109,7 +108,6 @@ const App = () => {
       supabase.channel('sub_clients_realtime_app').on('postgres_changes', { event: '*', schema: 'public', table: 'sub_clients' }, () => refreshData('clients')).subscribe(),
       supabase.channel('reagent-deliveries-changes-app').on('postgres_changes', { event: '*', schema: 'public', table: 'reagent_deliveries' }, () => refreshData('deliveries')).subscribe(),
       supabase.channel('equipment-changes-app').on('postgres_changes', { event: '*', schema: 'public', table: 'equipment_inventory' }, () => handleEquipmentUpdate()).subscribe(),
-      supabase.channel('reminders-changes-app').on('postgres_changes', { event: '*', schema: 'public', table: 'reminders' }, () => refreshData('reminders')).subscribe(),
     ];
     return () => {
       channels.forEach(channel => {
@@ -210,14 +208,20 @@ const App = () => {
     };
 
     if (existingId) {
-      const { data, error } = await supabase.from('service_orders').update(orderPayload).match({ id: existingId }).select();
-      if (error) toast({ title: "Error al actualizar orden", description: error.message, variant: "destructive" });
-      else if (data) toast({ title: "Orden Actualizada 🎉", description: `La orden de servicio se actualizó.` });
+      const { error } = await supabase.from('service_orders').update(orderPayload).match({ id: existingId }).select();
+      if (error) {
+        toast({ title: "Error al actualizar orden", description: error.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: "Orden Actualizada 🎉", description: `La orden de servicio se actualizó.` });
     } else {
       orderPayload.id = uuidv4();
-      const { data, error } = await supabase.from('service_orders').insert([orderPayload]).select();
-      if (error) toast({ title: "Error al crear orden", description: error.message, variant: "destructive" });
-      else if (data) toast({ title: "¡Orden Creada! 🚀", description: `Nueva orden de servicio agregada.` });
+      const { error } = await supabase.from('service_orders').insert([orderPayload]).select();
+      if (error) {
+        toast({ title: "Error al crear orden", description: error.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: "¡Orden Creada! 🚀", description: `Nueva orden de servicio agregada.` });
     }
 
     closeAllModals();
@@ -249,6 +253,8 @@ const App = () => {
         onDateFilterChange={setDateFilter}
         technicianFilter={technicianFilter}
         onTechnicianFilterChange={setTechnicianFilter}
+        reportedIssueFilter={reportedIssueFilter}
+        onReportedIssueFilterChange={setReportedIssueFilter}
         serviceOrders={serviceOrders}
         isMainAppScreen={!selectedClientId && activeTab === 'serviceOrders'}
         profile={profile}
@@ -288,7 +294,6 @@ const App = () => {
     <div className="min-h-screen bg-slate-100 dark:bg-background text-foreground p-2 sm:p-4 md:p-8">
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignUpPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/update-password" element={<UpdatePasswordPage />} />
         <Route path="/" element={
@@ -307,7 +312,6 @@ const App = () => {
                 deliveries={deliveries}
                 fetchDeliveries={() => refreshData('deliveries')}
                 equipment={equipment}
-                reminders={reminders}
                 onEquipmentUpdate={handleEquipmentUpdate}
                 handleClientSelect={handleClientSelect}
               />
@@ -321,7 +325,6 @@ const App = () => {
                 client={selectedClientData}
                 serviceOrders={serviceOrders}
                 deliveries={deliveries}
-                reminders={reminders}
                 onBack={handleBackToDashboard}
                 loading={dataLoading}
               />

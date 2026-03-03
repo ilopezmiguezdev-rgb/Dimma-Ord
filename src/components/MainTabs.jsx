@@ -1,15 +1,13 @@
 import React, { Suspense, lazy } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Wrench, Droplets, BarChart3, AlertCircle, MapPinned, HardDrive } from 'lucide-react';
+import { Wrench, Droplets, BarChart3, HardDrive } from 'lucide-react';
 import ServiceOrderGrid from '@/components/ServiceOrderGrid';
 import { useLocation } from 'react-router-dom';
+import usePermissions from '@/hooks/usePermissions';
 
 const EquipmentStatusPage = lazy(() => import('@/components/EquipmentStatusPage'));
 const ReagentManagement = lazy(() => import('@/components/ReagentManagement'));
 const AdvancedStatsPage = lazy(() => import('@/components/AdvancedStatsPage'));
-const RemindersPage = lazy(() => import('@/components/RemindersPage'));
-const RouteTrackingPage = lazy(() => import('@/components/RouteTrackingPage'));
-
 const TabLoader = () => (
   <div className="text-center py-10 text-lg text-sky-500">Cargando...</div>
 );
@@ -27,11 +25,11 @@ const MainTabs = ({
   deliveries,
   fetchDeliveries,
   equipment,
-  reminders,
   onEquipmentUpdate,
   handleClientSelect,
 }) => {
   const location = useLocation();
+  const { canViewStats } = usePermissions();
 
   if (location.pathname.startsWith('/client/')) {
     return null;
@@ -50,15 +48,11 @@ const MainTabs = ({
           <TabsTrigger value="reagents" className="data-[state=active]:bg-teal-600 data-[state=active]:text-white px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
             <Droplets className="h-4 w-4 sm:h-5 sm:w-5 md:mr-2"/> <span className="hidden md:inline">Reactivos</span>
           </TabsTrigger>
-          <TabsTrigger value="reminders" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
-            <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 md:mr-2"/> <span className="hidden md:inline">Alertas</span>
-          </TabsTrigger>
-          <TabsTrigger value="routeTracking" className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
-            <MapPinned className="h-4 w-4 sm:h-5 sm:w-5 md:mr-2"/> <span className="hidden md:inline">Rutas</span>
-          </TabsTrigger>
-          <TabsTrigger value="advancedStats" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
-            <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 md:mr-2"/> <span className="hidden md:inline">Stats</span>
-          </TabsTrigger>
+          {canViewStats && (
+            <TabsTrigger value="advancedStats" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
+              <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 md:mr-2"/> <span className="hidden md:inline">Stats</span>
+            </TabsTrigger>
+          )}
         </TabsList>
       </div>
 
@@ -69,7 +63,6 @@ const MainTabs = ({
             equipment={equipment}
             serviceOrders={serviceOrders}
             deliveries={deliveries}
-            reminders={reminders}
             loading={loading}
             onEquipmentUpdate={onEquipmentUpdate}
             onClientSelect={handleClientSelect}
@@ -95,21 +88,13 @@ const MainTabs = ({
           <ReagentManagement clients={clients} deliveries={deliveries} fetchDeliveries={fetchDeliveries} />
         </Suspense>
       </TabsContent>
-      <TabsContent value="reminders">
-        <Suspense fallback={<TabLoader />}>
-          <RemindersPage clients={clients} equipment={equipment} />
-        </Suspense>
-      </TabsContent>
-      <TabsContent value="routeTracking">
-        <Suspense fallback={<TabLoader />}>
-          <RouteTrackingPage clients={clients} loading={loading} />
-        </Suspense>
-      </TabsContent>
-      <TabsContent value="advancedStats">
-        <Suspense fallback={<TabLoader />}>
-          <AdvancedStatsPage serviceOrders={serviceOrders} clients={clients} deliveries={deliveries} />
-        </Suspense>
-      </TabsContent>
+      {canViewStats && (
+        <TabsContent value="advancedStats">
+          <Suspense fallback={<TabLoader />}>
+            <AdvancedStatsPage serviceOrders={serviceOrders} clients={clients} deliveries={deliveries} />
+          </Suspense>
+        </TabsContent>
+      )}
     </Tabs>
   );
 };

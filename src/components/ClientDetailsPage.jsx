@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Building, HardDrive, Calendar, Wrench, FlaskConical, PlusCircle, Save, X, Pencil, Trash2 } from 'lucide-react';
+import { ArrowLeft, Building, Wrench, FlaskConical, PlusCircle, Save, X, Pencil, Trash2 } from 'lucide-react';
+import usePermissions from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { format, parseISO } from 'date-fns';
@@ -23,6 +24,7 @@ const EditableSubClientField = ({ subClient, onUpdate }) => {
     const [name, setName] = useState(subClient.name);
     const [address, setAddress] = useState(subClient.address);
     const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const { canDelete } = usePermissions();
 
     const handleSave = async () => {
         if (!name) {
@@ -74,9 +76,11 @@ const EditableSubClientField = ({ subClient, onUpdate }) => {
                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsEditing(true)}>
                         <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-600" onClick={() => setDeleteDialogOpen(true)}>
+                    {canDelete && (
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-600" onClick={() => setDeleteDialogOpen(true)}>
                         <Trash2 className="h-4 w-4" />
-                    </Button>
+                      </Button>
+                    )}
                 </div>
             </div>
             <AlertDialog open={isDeleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -98,7 +102,7 @@ const EditableSubClientField = ({ subClient, onUpdate }) => {
 };
 
 
-const ClientDetailsPage = ({ client, serviceOrders, deliveries, reminders, onBack, loading }) => {
+const ClientDetailsPage = ({ client, serviceOrders, deliveries, onBack, loading }) => {
   const [subClients, setSubClients] = useState([]);
   const [isAddSubClientModalOpen, setAddSubClientModalOpen] = useState(false);
 
@@ -123,7 +127,6 @@ const ClientDetailsPage = ({ client, serviceOrders, deliveries, reminders, onBac
 
   const clientServiceOrders = useMemo(() => serviceOrders.filter(so => so.client_id === client?.id), [client, serviceOrders]);
   const clientDeliveries = useMemo(() => deliveries.filter(d => d.client_name === client?.name), [client, deliveries]);
-  const clientReminders = useMemo(() => reminders.filter(r => r.client_id === client?.id), [client, reminders]);
 
   if (loading) {
     return <div className="text-center py-10">Cargando detalles del cliente...</div>;
@@ -160,7 +163,7 @@ const ClientDetailsPage = ({ client, serviceOrders, deliveries, reminders, onBac
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Órdenes de Servicio</CardTitle>
@@ -179,16 +182,6 @@ const ClientDetailsPage = ({ client, serviceOrders, deliveries, reminders, onBac
           <CardContent>
             <div className="text-2xl font-bold">{clientDeliveries.length}</div>
             <p className="text-xs text-muted-foreground">Totales</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Recordatorios Pendientes</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{clientReminders.filter(r => r.status === 'Pendiente').length}</div>
-            <p className="text-xs text-muted-foreground">Activos</p>
           </CardContent>
         </Card>
       </div>

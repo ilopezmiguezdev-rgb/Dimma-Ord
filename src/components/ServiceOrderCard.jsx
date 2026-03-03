@@ -7,8 +7,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { getStatusColor, getOrderTypeColor } from '@/lib/orderUtils';
+import usePermissions from '@/hooks/usePermissions';
 
 const ServiceOrderCard = ({ order, index, onViewDetails, onEditOrder, onDeleteOrder }) => {
+  const { canDelete, canViewCosts } = usePermissions();
   return (
     <motion.div
       layout
@@ -44,7 +46,7 @@ const ServiceOrderCard = ({ order, index, onViewDetails, onEditOrder, onDeleteOr
             <User className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-slate-400" />
             <p className="truncate" title={order.assigned_technician || 'No asignado'}>{order.assigned_technician || 'No asignado'}</p>
           </div>
-          {typeof order.transport_cost === 'number' && (
+          {canViewCosts && typeof order.transport_cost === 'number' && (
              <div className="flex items-center text-xs text-slate-500 dark:text-slate-400 pl-6">
                 <span>Traslado: ${order.transport_cost}</span>
              </div>
@@ -55,10 +57,12 @@ const ServiceOrderCard = ({ order, index, onViewDetails, onEditOrder, onDeleteOr
       <div className="p-3 mt-auto bg-slate-50 dark:bg-slate-800/30">
         <div className="flex justify-between items-center mb-3">
             <Badge className={`${getStatusColor(order.status)} text-xs font-medium`}>{order.status}</Badge>
-            <div className="flex flex-col items-end">
-              <span className="text-xs text-slate-500 dark:text-slate-400">Total</span>
-              <span className="font-bold text-lg text-emerald-600 dark:text-emerald-400">${order.total_cost || 0}</span>
-            </div>
+            {canViewCosts && (
+              <div className="flex flex-col items-end">
+                <span className="text-xs text-slate-500 dark:text-slate-400">Total</span>
+                <span className="font-bold text-lg text-emerald-600 dark:text-emerald-400">${order.total_cost || 0}</span>
+              </div>
+            )}
         </div>
         <div className="flex justify-end space-x-1 mt-2">
           <Button variant="ghost" size="icon" onClick={() => onViewDetails(order)} aria-label="Ver detalles" className="text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300 h-8 w-8" title="Ver Detalles">
@@ -67,25 +71,27 @@ const ServiceOrderCard = ({ order, index, onViewDetails, onEditOrder, onDeleteOr
           <Button variant="ghost" size="icon" onClick={() => onEditOrder(order)} aria-label="Editar orden" className="text-amber-500 hover:text-amber-400 dark:text-yellow-400 dark:hover:text-yellow-300 h-8 w-8" title="Editar">
             <Edit className="h-4 w-4" />
           </Button>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Eliminar orden" className="text-red-600 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400 h-8 w-8" title="Eliminar">
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-slate-100 dark:bg-slate-800 border-red-500 text-slate-800 dark:text-white">
-              <DialogHeader>
-                <DialogTitle className="text-xl text-red-600 dark:text-red-400 flex items-center"><AlertTriangle className="h-6 w-6 mr-2 text-yellow-500 dark:text-yellow-400"/>Confirmar Eliminación</DialogTitle>
-                <DialogDescription className="text-slate-600 dark:text-slate-300">
-                  ¿Estás seguro de que quieres eliminar la orden de servicio para <span className="font-semibold text-red-600 dark:text-red-400">{order.client_name}</span>? Esta acción no se puede deshacer.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter className="mt-4">
-                <Button variant="outline" onClick={() => document.querySelector('[data-state="open"] [aria-label="Close"]')?.click()} className="text-slate-700 dark:text-slate-300 border-slate-400 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-700">Cancelar</Button>
-                <Button variant="destructive" onClick={() => onDeleteOrder(order.id)} className="bg-red-600 hover:bg-red-700">Eliminar</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          {canDelete && (
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="Eliminar orden" className="text-red-600 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400 h-8 w-8" title="Eliminar">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-slate-100 dark:bg-slate-800 border-red-500 text-slate-800 dark:text-white">
+                <DialogHeader>
+                  <DialogTitle className="text-xl text-red-600 dark:text-red-400 flex items-center"><AlertTriangle className="h-6 w-6 mr-2 text-yellow-500 dark:text-yellow-400"/>Confirmar Eliminación</DialogTitle>
+                  <DialogDescription className="text-slate-600 dark:text-slate-300">
+                    ¿Estás seguro de que quieres eliminar la orden de servicio para <span className="font-semibold text-red-600 dark:text-red-400">{order.client_name}</span>? Esta acción no se puede deshacer.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter className="mt-4">
+                  <Button variant="outline" onClick={() => document.querySelector('[data-state="open"] [aria-label="Close"]')?.click()} className="text-slate-700 dark:text-slate-300 border-slate-400 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-700">Cancelar</Button>
+                  <Button variant="destructive" onClick={() => onDeleteOrder(order.id)} className="bg-red-600 hover:bg-red-700">Eliminar</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </div>
     </motion.div>

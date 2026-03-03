@@ -15,17 +15,19 @@ import {
 } from "@/components/ui/dropdown-menu.jsx";
 import { useNavigate } from 'react-router-dom';
 
-const AppHeader = ({ 
+const AppHeader = ({
   logoUrl,
-  onAddNewOrder, 
-  searchTerm, 
-  onSearchTermChange, 
-  statusFilter, 
-  onStatusFilterChange, 
-  priorityFilter, 
+  onAddNewOrder,
+  searchTerm,
+  onSearchTermChange,
+  statusFilter,
+  onStatusFilterChange,
+  priorityFilter,
   onPriorityFilterChange,
   dateFilter,
   onDateFilterChange,
+  reportedIssueFilter,
+  onReportedIssueFilterChange,
   isMainAppScreen,
   profile,
   onLogout
@@ -134,9 +136,16 @@ const AppHeader = ({
               </Select>
             </div>
           </div>
-          <div className="flex justify-center sm:justify-start">
-            <Button 
-              onClick={onAddNewOrder} 
+          <div className="flex flex-wrap items-center gap-3">
+            <Input
+              type="text"
+              placeholder="Filtrar por problema reportado..."
+              value={reportedIssueFilter}
+              onChange={(e) => onReportedIssueFilterChange(e.target.value)}
+              className="w-full sm:w-56 h-9 bg-slate-100 dark:bg-slate-800/70 border-sky-500/50 placeholder-gray-500 dark:placeholder-gray-400 text-slate-800 dark:text-white rounded-lg text-sm"
+            />
+            <Button
+              onClick={onAddNewOrder}
               className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2 px-4 text-sm rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
             >
               <PlusCircle className="mr-2 h-4 w-4" /> Nueva Orden

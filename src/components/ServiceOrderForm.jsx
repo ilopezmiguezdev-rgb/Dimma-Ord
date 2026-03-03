@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/toaster";
 import { supabase } from '@/lib/supabaseClient';
+import usePermissions from '@/hooks/usePermissions';
 
 import FormSection from '@/components/service-order-form/FormSection';
 import ClientInfo from '@/components/service-order-form/ClientInfo';
@@ -15,6 +16,7 @@ import AddEquipmentModal from '@/components/AddEquipmentModal';
 import AddSubClientModal from '@/components/AddSubClientModal';
 
 const ServiceOrderForm = ({ isOpen, onClose, onSave, existingOrder, clients, onEquipmentUpdate, onAddNewClient }) => {
+  const { canViewCosts } = usePermissions();
   const [formData, setFormData] = useState(getInitialData());
   const [clientEquipment, setClientEquipment] = useState([]);
   const [isFetchingEquipment, setIsFetchingEquipment] = useState(false);
@@ -70,10 +72,31 @@ const ServiceOrderForm = ({ isOpen, onClose, onSave, existingOrder, clients, onE
     }
 
     setIsFetchingEquipment(true);
-    const [equipmentRes, subClientsRes] = await Promise.all([
-      supabase.from('equipment_inventory').select('id, serial_number, equipment_models(brand, model_name, equipment_types(name)), sub_clients(id, name)').eq('client_id', clientId),
-      supabase.from('sub_clients').select('id, name, address').eq('client_id', clientId).order('name')
-    ]);
+    const subClientsRes = await supabase
+      .from('sub_clients')
+      .select('id, name, address')
+      .eq('client_id', clientId)
+      .order('name');
+
+    if (subClientsRes.error) {
+      console.error("Error fetching sub-clients", subClientsRes.error);
+      setSubClients([]);
+      setClientEquipment([]);
+      setIsFetchingEquipment(false);
+      return;
+    }
+
+    const fetchedSubClients = subClientsRes.data;
+    setSubClients(fetchedSubClients);
+
+    let equipmentRes = { data: [], error: null };
+    if (fetchedSubClients.length > 0) {
+      const subClientIds = fetchedSubClients.map(sc => sc.id);
+      equipmentRes = await supabase
+        .from('equipment_inventory')
+        .select('id, serial_number, sub_client_id, equipment_models(brand, model_name, equipment_types(name)), sub_clients(id, name)')
+        .in('sub_client_id', subClientIds);
+    }
 
     if (equipmentRes.error) {
       console.error("Error fetching client equipment", equipmentRes.error);
@@ -81,14 +104,20 @@ const ServiceOrderForm = ({ isOpen, onClose, onSave, existingOrder, clients, onE
     } else {
       setClientEquipment(equipmentRes.data);
     }
-
-    if (subClientsRes.error) {
-      console.error("Error fetching sub-clients", subClientsRes.error);
-      setSubClients([]);
-    } else {
-      setSubClients(subClientsRes.data);
-    }
     setIsFetchingEquipment(false);
+
+    if (fetchedSubClients.length === 1) {
+      const sc = fetchedSubClients[0];
+      setFormData(prev => {
+        if (prev.sub_client_id) return prev;
+        return {
+          ...prev,
+          sub_client_id: sc.id,
+          sub_client_name: sc.name,
+          clientLocation: sc.address || prev.clientLocation,
+        };
+      });
+    }
   }, []);
 
   useEffect(() => {
@@ -124,8 +153,15 @@ const ServiceOrderForm = ({ isOpen, onClose, onSave, existingOrder, clients, onE
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!formData.client_id) {
+      toast({ title: "Error", description: "Debe seleccionar un cliente.", variant: "destructive" });
+      return;
+    }
+    if (!formData.equipment_id && !formData.equipmentSerial) {
+      toast({ title: "Error", description: "Debe seleccionar o ingresar un equipo.", variant: "destructive" });
+      return;
+    }
     onSave(formData);
-    onClose();
   };
 
   const handleEquipmentAdded = (newEquipment) => {
@@ -198,7 +234,7 @@ const ServiceOrderForm = ({ isOpen, onClose, onSave, existingOrder, clients, onE
               <div className="flex flex-col gap-6">
                 <ServiceDetails formData={formData} handleChange={handleChange} />
                 <PartsUsed formData={formData} setFormData={setFormData} />
-                <CostsSummary formData={formData} handleChange={handleChange} />
+                {canViewCosts && <CostsSummary formData={formData} handleChange={handleChange} />}
               </div>
 
             </div>

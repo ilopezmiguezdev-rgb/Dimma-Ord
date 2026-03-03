@@ -26,3 +26,5 @@ npm-debug.log*
 # generated
 public/llms.txt
 .claude/
+.Implementation/
+Implementation/
