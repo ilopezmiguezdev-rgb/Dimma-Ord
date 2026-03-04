@@ -141,7 +141,7 @@ const ClientEquipmentSection = ({ client, equipment, serviceOrders, onUpdate, on
   const { canDelete } = usePermissions();
   const clientEquipment = useMemo(() => {
     const filtered = equipment.filter(e => e.sub_clients?.client_id === client.id);
-    if (labFilter) return filtered.filter(e => e.sub_client_id === labFilter);
+    if (labFilter && labFilter !== 'all') return filtered.filter(e => e.sub_client_id === labFilter);
     return filtered;
   }, [client.id, equipment, labFilter]);
   const clientServiceOrders = useMemo(() => serviceOrders.filter(so => so.client_id === client.id), [client.id, serviceOrders]);
@@ -185,8 +185,8 @@ const ClientEquipmentSection = ({ client, equipment, serviceOrders, onUpdate, on
 const EquipmentStatusPage = ({ clients, equipment, serviceOrders, deliveries, loading, onEquipmentUpdate, onClientSelect }) => {
   const [clientEquipmentMap, setClientEquipmentMap] = useState({});
   const [isAddModalOpen, setAddModalOpen] = useState(false);
-  const [clientFilter, setClientFilter] = useState('');
-  const [labFilter, setLabFilter] = useState('');
+  const [clientFilter, setClientFilter] = useState('all');
+  const [labFilter, setLabFilter] = useState('all');
 
   useMemo(() => {
     const newMap = clients.reduce((acc, client) => {
@@ -197,7 +197,7 @@ const EquipmentStatusPage = ({ clients, equipment, serviceOrders, deliveries, lo
   }, [clients, equipment]);
 
   const availableLabs = useMemo(() => {
-    if (!clientFilter) return [];
+    if (clientFilter === 'all') return [];
     const clientEquip = equipment.filter(e => e.sub_clients?.client_id === clientFilter);
     const labMap = new Map();
     clientEquip.forEach(e => {
@@ -207,7 +207,7 @@ const EquipmentStatusPage = ({ clients, equipment, serviceOrders, deliveries, lo
   }, [clientFilter, equipment]);
 
   const visibleClients = useMemo(() => {
-    if (!clientFilter) return clients;
+    if (clientFilter === 'all') return clients;
     return clients.filter(c => c.id === clientFilter);
   }, [clientFilter, clients]);
 
@@ -267,22 +267,22 @@ const EquipmentStatusPage = ({ clients, equipment, serviceOrders, deliveries, lo
         <AddEquipmentModal isOpen={isAddModalOpen} onClose={() => setAddModalOpen(false)} onEquipmentAdded={onEquipmentUpdate} clients={clients} />
 
         <div className="flex flex-wrap gap-3 mb-4">
-          <Select value={clientFilter} onValueChange={(val) => { setClientFilter(val); setLabFilter(''); }}>
+          <Select value={clientFilter} onValueChange={(val) => { setClientFilter(val); setLabFilter('all'); }}>
             <SelectTrigger className="w-48">
               <SelectValue placeholder="Todos los clientes" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos los clientes</SelectItem>
+              <SelectItem value="all">Todos los clientes</SelectItem>
               {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
             </SelectContent>
           </Select>
-          {clientFilter && availableLabs.length > 0 && (
+          {clientFilter !== 'all' && availableLabs.length > 0 && (
             <Select value={labFilter} onValueChange={setLabFilter}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Todos los laboratorios" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos los laboratorios</SelectItem>
+                <SelectItem value="all">Todos los laboratorios</SelectItem>
                 {availableLabs.map(l => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
               </SelectContent>
             </Select>
