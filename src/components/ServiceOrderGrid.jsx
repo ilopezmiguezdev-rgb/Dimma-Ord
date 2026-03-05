@@ -44,4 +44,4 @@ const ServiceOrderGrid = ({ orders, onEditOrder, onDeleteOrder, onViewDetails })
   );
 };
 
-export default ServiceOrderGrid;
+export default React.memo(ServiceOrderGrid, (prev, next) => prev.orders === next.orders);

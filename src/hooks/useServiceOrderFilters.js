@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { sub, formatISO } from 'date-fns';
 
@@ -8,22 +8,50 @@ const useServiceOrderFilters = (orders) => {
   const searchParams = new URLSearchParams(location.search);
 
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchParams.get('search') || '');
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || 'Todos');
   const [priorityFilter, setPriorityFilter] = useState(searchParams.get('type') || 'Todas');
   const [dateFilter, setDateFilter] = useState(searchParams.get('period') || 'all');
   const [equipmentSerialFilter, setEquipmentSerialFilter] = useState(searchParams.get('equipment_serial') || '');
   const [technicianFilter, setTechnicianFilter] = useState(searchParams.get('technician') || 'Todos');
   const [reportedIssueFilter, setReportedIssueFilterState] = useState(searchParams.get('reported_issue') || '');
+  const [debouncedReportedIssueFilter, setDebouncedReportedIssueFilter] = useState(searchParams.get('reported_issue') || '');
+
+  const debounceTimerRef = useRef({});
+
+  const debouncedUpdateURLParams = useCallback((key, value, delay = 300) => {
+    if (debounceTimerRef.current[key]) {
+      clearTimeout(debounceTimerRef.current[key]);
+    }
+    debounceTimerRef.current[key] = setTimeout(() => {
+      const params = new URLSearchParams(location.search);
+      if (value && value !== 'Todos' && value !== 'all' && value !== 'Todas') {
+        params.set(key, value);
+      } else {
+        params.delete(key);
+      }
+      navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+    }, delay);
+  }, [location.search, location.pathname, navigate]);
+
+  useEffect(() => {
+    const timers = debounceTimerRef.current;
+    return () => {
+      Object.values(timers).forEach(clearTimeout);
+    };
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     setSearchTerm(params.get('search') || '');
+    setDebouncedSearchTerm(params.get('search') || '');
     setStatusFilter(params.get('status') || 'Todos');
     setPriorityFilter(params.get('type') || 'Todas');
     setDateFilter(params.get('period') || 'all');
     setEquipmentSerialFilter(params.get('equipment_serial') || '');
     setTechnicianFilter(params.get('technician') || 'Todos');
     setReportedIssueFilterState(params.get('reported_issue') || '');
+    setDebouncedReportedIssueFilter(params.get('reported_issue') || '');
   }, [location.search]);
 
   const updateURLParams = (key, value, reset = false) => {
@@ -62,8 +90,8 @@ const useServiceOrderFilters = (orders) => {
       return filtered.filter(order => order.equipment_serial === equipmentSerialFilter);
     }
 
-    if (searchTerm) {
-      const lowercasedTerm = searchTerm.toLowerCase();
+    if (debouncedSearchTerm) {
+      const lowercasedTerm = debouncedSearchTerm.toLowerCase();
       filtered = filtered.filter(order =>
         (order.client_name && order.client_name.toLowerCase().includes(lowercasedTerm)) ||
         (order.equipment_model && order.equipment_model.toLowerCase().includes(lowercasedTerm)) ||
@@ -85,8 +113,8 @@ const useServiceOrderFilters = (orders) => {
       filtered = filtered.filter(order => order.assigned_technician === technicianFilter);
     }
 
-    if (reportedIssueFilter) {
-      const lower = reportedIssueFilter.toLowerCase();
+    if (debouncedReportedIssueFilter) {
+      const lower = debouncedReportedIssueFilter.toLowerCase();
       filtered = filtered.filter(
         order => order.reported_issue && order.reported_issue.toLowerCase().includes(lower)
       );
@@ -109,16 +137,33 @@ const useServiceOrderFilters = (orders) => {
     }
     
     return filtered.sort((a, b) => new Date(b.creation_date) - new Date(a.creation_date));
-  }, [orders, searchTerm, statusFilter, priorityFilter, dateFilter, equipmentSerialFilter, technicianFilter, reportedIssueFilter]);
+  }, [orders, debouncedSearchTerm, statusFilter, priorityFilter, dateFilter, equipmentSerialFilter, technicianFilter, debouncedReportedIssueFilter]);
+
+  const handleSetSearchTerm = (value) => {
+    setSearchTerm(value);
+    if (debounceTimerRef.current['searchFilter']) {
+      clearTimeout(debounceTimerRef.current['searchFilter']);
+    }
+    debounceTimerRef.current['searchFilter'] = setTimeout(() => {
+      setDebouncedSearchTerm(value);
+    }, 300);
+    debouncedUpdateURLParams('search', value);
+  };
 
   const handleSetReportedIssueFilter = (value) => {
     setReportedIssueFilterState(value);
-    updateURLParams('reported_issue', value);
+    if (debounceTimerRef.current['reportedIssueFilter']) {
+      clearTimeout(debounceTimerRef.current['reportedIssueFilter']);
+    }
+    debounceTimerRef.current['reportedIssueFilter'] = setTimeout(() => {
+      setDebouncedReportedIssueFilter(value);
+    }, 300);
+    debouncedUpdateURLParams('reported_issue', value);
   };
 
   return {
     searchTerm,
-    setSearchTerm: (value) => updateURLParams('search', value),
+    setSearchTerm: handleSetSearchTerm,
     statusFilter,
     setStatusFilter: (value) => updateURLParams('status', value),
     priorityFilter,

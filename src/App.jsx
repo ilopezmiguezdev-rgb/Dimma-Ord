@@ -238,7 +238,7 @@ const App = () => {
   const logoUrl = "https://horizons-cdn.hostinger.com/3ce3d85f-4f57-4c75-9f23-346da62300fc/1d5487d0103b1ec9f0ebb6131f7ae9fb.jpg";
   const selectedClientData = clients.find(c => c.id === selectedClientId);
 
-  const ProtectedLayout = ({ children }) => (
+  const renderProtectedLayout = (children) => (
     <>
       <AppHeader
         logoUrl={logoUrl}
@@ -298,7 +298,7 @@ const App = () => {
         <Route path="/update-password" element={<UpdatePasswordPage />} />
         <Route path="/" element={
           <ProtectedRoute>
-            <ProtectedLayout>
+            {renderProtectedLayout(
               <MainTabs
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
@@ -315,12 +315,12 @@ const App = () => {
                 onEquipmentUpdate={handleEquipmentUpdate}
                 handleClientSelect={handleClientSelect}
               />
-            </ProtectedLayout>
+            )}
           </ProtectedRoute>
         } />
         <Route path="/client/:clientId" element={
           <ProtectedRoute>
-            <ProtectedLayout>
+            {renderProtectedLayout(
               <ClientDetailsPage
                 client={selectedClientData}
                 serviceOrders={serviceOrders}
@@ -328,14 +328,14 @@ const App = () => {
                 onBack={handleBackToDashboard}
                 loading={dataLoading}
               />
-            </ProtectedLayout>
+            )}
           </ProtectedRoute>
         } />
         <Route path="/profile" element={
           <ProtectedRoute>
-            <ProtectedLayout>
+            {renderProtectedLayout(
               <ProfilePage />
-            </ProtectedLayout>
+            )}
           </ProtectedRoute>
         } />
       </Routes>
