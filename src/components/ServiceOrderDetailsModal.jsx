@@ -1,15 +1,45 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Eye, X, Printer, Building, Package, AlertTriangle, Wrench, Clock, Hash } from 'lucide-react';
+import { Eye, X, Printer, Download, Building, Package, AlertTriangle, Wrench, Clock, Hash, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getStatusColorSolid as getStatusColor, getPriorityColor } from '@/lib/orderUtils';
 import usePermissions from '@/hooks/usePermissions';
+import usePdfDownload from '@/hooks/usePdfDownload';
+import { supabase } from '@/lib/supabaseClient';
+import { useToast } from "@/components/ui/use-toast";
 
 const ServiceOrderDetailsModal = ({ order, isOpen, onClose, logoUrl }) => {
   const { canViewCosts } = usePermissions();
+  const { downloadOrderPdf, isGenerating } = usePdfDownload(logoUrl, canViewCosts);
+  const [isSending, setIsSending] = useState(false);
+  const { toast } = useToast();
   if (!order) return null;
+
+  const handleSendNotification = async () => {
+    setIsSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-order-notification', {
+        body: { order },
+      });
+      if (error) throw error;
+      if (data?.skipped) {
+        const reasons = {
+          no_email: 'El cliente no tiene email de contacto configurado.',
+          no_client_id: 'La orden no tiene un cliente asociado.',
+          already_sent: 'La notificación ya fue enviada anteriormente.',
+        };
+        toast({ title: "No enviado", description: reasons[data.reason] || 'Notificación omitida.' });
+      } else {
+        toast({ title: "Email Enviado", description: "La notificación fue enviada al cliente." });
+      }
+    } catch {
+      toast({ title: "Error", description: "No se pudo enviar la notificación.", variant: "destructive" });
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
@@ -252,6 +282,22 @@ const ServiceOrderDetailsModal = ({ order, isOpen, onClose, logoUrl }) => {
           </Button>
           <Button onClick={handlePrint} className="bg-teal-500 hover:bg-teal-600 text-white">
             <Printer className="h-4 w-4 mr-2" /> Imprimir / Exportar
+          </Button>
+          <Button
+            onClick={() => downloadOrderPdf(order)}
+            disabled={isGenerating}
+            className="bg-sky-500 hover:bg-sky-600 text-white"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            {isGenerating ? 'Generando...' : 'Descargar PDF'}
+          </Button>
+          <Button
+            onClick={handleSendNotification}
+            disabled={isSending}
+            className="bg-emerald-500 hover:bg-emerald-600 text-white"
+          >
+            <Send className="h-4 w-4 mr-2" />
+            {isSending ? 'Enviando...' : 'Enviar Email'}
           </Button>
         </DialogFooter>
       </DialogContent>

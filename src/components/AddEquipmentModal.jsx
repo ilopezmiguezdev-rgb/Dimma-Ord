@@ -98,17 +98,39 @@ const AddEquipmentModal = ({ isOpen, onClose, onEquipmentAdded, clients, subClie
         }
         setIsLoading(true);
 
-        // 1. Upsert Model
-        const { data: modelData, error: modelError } = await supabase
-            .from('equipment_models')
-            .upsert({ type_id: typeId, brand, model_name: modelName }, { onConflict: 'type_id,brand,model_name', ignoreDuplicates: false })
-            .select()
-            .single();
+        const trimmedBrand = brand.trim();
+        const trimmedModel = modelName.trim();
 
-        if (modelError) {
+        // 1. Find or create model
+        const { data: existingModels, error: lookupError } = await supabase
+            .from('equipment_models')
+            .select('*')
+            .eq('type_id', typeId)
+            .eq('brand', trimmedBrand)
+            .eq('model_name', trimmedModel);
+
+        if (lookupError) {
             setIsLoading(false);
-            toast({ title: "Error", description: "No se pudo guardar el modelo del equipo.", variant: "destructive" });
+            toast({ title: "Error", description: "Error al buscar el modelo.", variant: "destructive" });
             return;
+        }
+
+        let modelData;
+        if (existingModels && existingModels.length > 0) {
+            modelData = existingModels[0];
+        } else {
+            const { data: newModel, error: insertError } = await supabase
+                .from('equipment_models')
+                .insert({ type_id: typeId, brand: trimmedBrand, model_name: trimmedModel })
+                .select()
+                .single();
+
+            if (insertError) {
+                setIsLoading(false);
+                toast({ title: "Error", description: "No se pudo guardar el modelo del equipo.", variant: "destructive" });
+                return;
+            }
+            modelData = newModel;
         }
 
         // 2. Insert Equipment

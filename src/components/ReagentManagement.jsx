@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Droplets, PlusCircle, Edit, Trash2, Search, Filter, AlertTriangle, Calendar } from 'lucide-react';
+import { Droplets, PlusCircle, Edit, Trash2, Search, Filter, AlertTriangle, Calendar, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import useReagentPdfDownload from '@/hooks/useReagentPdfDownload';
 import { toast } from '@/components/ui/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -14,7 +15,8 @@ import { es } from 'date-fns/locale';
 import { supabase } from '@/lib/supabaseClient';
 import { isMobile } from '@/lib/orderUtils';
 
-const ReagentManagement = ({ clients: propClients, deliveries, fetchDeliveries }) => {
+const ReagentManagement = ({ clients: propClients, deliveries, fetchDeliveries, logoUrl }) => {
+  const { downloadDeliveryPdf, isGenerating: isPdfGenerating } = useReagentPdfDownload(logoUrl);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [editingDelivery, setEditingDelivery] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -222,6 +224,16 @@ const ReagentManagement = ({ clients: propClients, deliveries, fetchDeliveries }
                       <Button variant="ghost" size="icon" onClick={() => handleOpenEditDeliveryModal(delivery)} className="text-amber-500 hover:text-amber-400 dark:text-yellow-400 dark:hover:text-yellow-300 h-8 w-8">
                           <Edit className="h-4 w-4" />
                       </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => downloadDeliveryPdf(delivery)}
+                        disabled={isPdfGenerating}
+                        className="text-sky-600 hover:text-sky-500 h-8 w-8"
+                        title="PDF"
+                      >
+                        <FileDown className="h-4 w-4" />
+                      </Button>
                       <Dialog>
                         <DialogTrigger asChild>
                            <Button variant="ghost" size="icon" className="text-red-600 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400 h-8 w-8">
@@ -283,6 +295,16 @@ const ReagentManagement = ({ clients: propClients, deliveries, fetchDeliveries }
                       <TableCell className="text-right py-4">
                         <Button variant="ghost" size="icon" onClick={() => handleOpenEditDeliveryModal(delivery)} className="text-amber-500 hover:text-amber-400 dark:text-yellow-400 dark:hover:text-yellow-300 mr-1">
                           <Edit className="h-5 w-5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => downloadDeliveryPdf(delivery)}
+                          disabled={isPdfGenerating}
+                          className="text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300 mr-1"
+                          title="Descargar PDF"
+                        >
+                          <FileDown className="h-5 w-5" />
                         </Button>
                         <Dialog>
                           <DialogTrigger asChild>

@@ -216,12 +216,17 @@ const App = () => {
       toast({ title: "Orden Actualizada 🎉", description: `La orden de servicio se actualizó.` });
     } else {
       orderPayload.id = uuidv4();
-      const { error } = await supabase.from('service_orders').insert([orderPayload]).select();
+      const { data: insertedOrder, error } = await supabase.from('service_orders').insert([orderPayload]).select().single();
       if (error) {
         toast({ title: "Error al crear orden", description: error.message, variant: "destructive" });
         return;
       }
       toast({ title: "¡Orden Creada! 🚀", description: `Nueva orden de servicio agregada.` });
+      supabase.functions.invoke('send-order-notification', {
+        body: { order: insertedOrder },
+      }).catch((err) => {
+        console.warn('Notification function error (non-blocking):', err);
+      });
     }
 
     closeAllModals();
@@ -232,6 +237,7 @@ const App = () => {
     if (newClient) {
       toast({ title: "Cliente Agregado", description: `El cliente "${newClient.name}" ha sido creado.` });
       setAddClientModalOpen(false);
+      refreshData('clients');
     }
   };
 
@@ -312,6 +318,7 @@ const App = () => {
                 deliveries={deliveries}
                 fetchDeliveries={() => refreshData('deliveries')}
                 equipment={equipment}
+                logoUrl={logoUrl}
                 onEquipmentUpdate={handleEquipmentUpdate}
                 handleClientSelect={handleClientSelect}
               />
