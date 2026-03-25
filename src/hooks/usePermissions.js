@@ -15,6 +15,7 @@ const usePermissions = () => {
       canViewStats: isAdmin,
       canViewCosts: isAdmin,
       canManageUsers: isAdmin,
+      canManageClients: isAdmin,
     };
   }, [profile?.role]);
 };

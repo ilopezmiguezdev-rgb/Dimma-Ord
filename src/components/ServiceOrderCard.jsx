@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Edit, Trash2, Eye, Calendar, User, Package, AlertTriangle, Building } from 'lucide-react';
+import { Edit, Trash2, Eye, Calendar, User, Package, AlertTriangle, Building, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -8,9 +8,13 @@ import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { getStatusColor, getOrderTypeColor } from '@/lib/orderUtils';
 import usePermissions from '@/hooks/usePermissions';
+import usePdfDownload from '@/hooks/usePdfDownload';
+
+const logoUrl = "https://horizons-cdn.hostinger.com/3ce3d85f-4f57-4c75-9f23-346da62300fc/1d5487d0103b1ec9f0ebb6131f7ae9fb.jpg";
 
 const ServiceOrderCard = ({ order, index, onViewDetails, onEditOrder, onDeleteOrder }) => {
   const { canDelete, canViewCosts } = usePermissions();
+  const { downloadOrderPdf, isGenerating } = usePdfDownload(logoUrl, canViewCosts);
   return (
     <motion.div
       layout
@@ -67,6 +71,9 @@ const ServiceOrderCard = ({ order, index, onViewDetails, onEditOrder, onDeleteOr
         <div className="flex justify-end space-x-1 mt-2">
           <Button variant="ghost" size="icon" onClick={() => onViewDetails(order)} aria-label="Ver detalles" className="text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300 h-8 w-8" title="Ver Detalles">
             <Eye className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); downloadOrderPdf(order); }} disabled={isGenerating} aria-label="Descargar PDF" className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 h-8 w-8" title="Descargar PDF">
+            <Download className="h-4 w-4" />
           </Button>
           <Button variant="ghost" size="icon" onClick={() => onEditOrder(order)} aria-label="Editar orden" className="text-amber-500 hover:text-amber-400 dark:text-yellow-400 dark:hover:text-yellow-300 h-8 w-8" title="Editar">
             <Edit className="h-4 w-4" />

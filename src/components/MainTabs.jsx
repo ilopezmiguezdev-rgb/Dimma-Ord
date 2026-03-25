@@ -1,6 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Wrench, Droplets, BarChart3, HardDrive } from 'lucide-react';
+import { Wrench, Droplets, BarChart3, HardDrive, Building } from 'lucide-react';
 import ServiceOrderGrid from '@/components/ServiceOrderGrid';
 import { useLocation } from 'react-router-dom';
 import usePermissions from '@/hooks/usePermissions';
@@ -8,6 +8,7 @@ import usePermissions from '@/hooks/usePermissions';
 const EquipmentStatusPage = lazy(() => import('@/components/EquipmentStatusPage'));
 const ReagentManagement = lazy(() => import('@/components/ReagentManagement'));
 const AdvancedStatsPage = lazy(() => import('@/components/AdvancedStatsPage'));
+const ClientManagementPage = lazy(() => import('@/components/ClientManagementPage'));
 const TabLoader = () => (
   <div className="text-center py-10 text-lg text-sky-500">Cargando...</div>
 );
@@ -27,9 +28,10 @@ const MainTabs = ({
   equipment,
   onEquipmentUpdate,
   handleClientSelect,
+  logoUrl,
 }) => {
   const location = useLocation();
-  const { canViewStats } = usePermissions();
+  const { canViewStats, canManageClients } = usePermissions();
 
   if (location.pathname.startsWith('/client/')) {
     return null;
@@ -48,6 +50,11 @@ const MainTabs = ({
           <TabsTrigger value="reagents" className="data-[state=active]:bg-teal-600 data-[state=active]:text-white px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
             <Droplets className="h-4 w-4 sm:h-5 sm:w-5 md:mr-2"/> <span className="hidden md:inline">Reactivos</span>
           </TabsTrigger>
+          {canManageClients && (
+            <TabsTrigger value="clients" className="data-[state=active]:bg-amber-600 data-[state=active]:text-white px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
+              <Building className="h-4 w-4 sm:h-5 sm:w-5 md:mr-2"/> <span className="hidden md:inline">Clientes</span>
+            </TabsTrigger>
+          )}
           {canViewStats && (
             <TabsTrigger value="advancedStats" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
               <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 md:mr-2"/> <span className="hidden md:inline">Stats</span>
@@ -85,9 +92,16 @@ const MainTabs = ({
 
       <TabsContent value="reagents">
         <Suspense fallback={<TabLoader />}>
-          <ReagentManagement clients={clients} deliveries={deliveries} fetchDeliveries={fetchDeliveries} />
+          <ReagentManagement clients={clients} deliveries={deliveries} fetchDeliveries={fetchDeliveries} logoUrl={logoUrl} />
         </Suspense>
       </TabsContent>
+      {canManageClients && (
+        <TabsContent value="clients">
+          <Suspense fallback={<TabLoader />}>
+            <ClientManagementPage clients={clients} />
+          </Suspense>
+        </TabsContent>
+      )}
       {canViewStats && (
         <TabsContent value="advancedStats">
           <Suspense fallback={<TabLoader />}>
