@@ -7,6 +7,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { getStatusColorSolid as getStatusColor, getPriorityColor } from '@/lib/orderUtils';
 import usePermissions from '@/hooks/usePermissions';
 import usePdfDownload from '@/hooks/usePdfDownload';
+import useMaintenanceChecklist from '@/hooks/useMaintenanceChecklist';
+import MaintenanceChecklist from '@/components/MaintenanceChecklist';
 import { supabase } from '@/lib/supabaseClient';
 import { useToast } from "@/components/ui/use-toast";
 
@@ -15,6 +17,9 @@ const ServiceOrderDetailsModal = ({ order, isOpen, onClose, logoUrl }) => {
   const { downloadOrderPdf, isGenerating } = usePdfDownload(logoUrl, canViewCosts);
   const [isSending, setIsSending] = useState(false);
   const { toast } = useToast();
+  const isMantenimiento = order?.order_type === 'Mantenimiento';
+  const { items: checklistItems, loading: checklistLoading, toggleItem } =
+    useMaintenanceChecklist(order?.equipment_id, order?.id, isMantenimiento);
   if (!order) return null;
 
   const handleSendNotification = async () => {
@@ -222,6 +227,14 @@ const ServiceOrderDetailsModal = ({ order, isOpen, onClose, logoUrl }) => {
                 <p className="text-sm text-slate-500 dark:text-slate-400 italic">No se ha registrado un resumen del trabajo.</p>
               )}
             </div>
+
+            {isMantenimiento && (
+              <MaintenanceChecklist
+                items={checklistItems}
+                loading={checklistLoading}
+                onToggle={toggleItem}
+              />
+            )}
 
             {typeof order.task_time === 'number' && order.task_time > 0 && (
               <div className="mb-6 pb-6 border-b border-sky-500/30">
